@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>DynamicsCrmSolutionPorter</id>
+    <version>1.0.0</version>
+    <title>Dynamics Crm Solution Porter</title>
+    <authors>Florian Kroenert (DigitalFlow)</authors>
+    <owners>KUMAVISION AG</owners>
+    <projectUrl>https://github.com/DigitalFlow/DynamicsCrmSolutionPorter</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>
+      Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customization
+    </description>
+    <copyright>Copyright KUMAVISION AG</copyright>
+    <dependencies>
+		<dependency id="Microsoft.Crm.Sdk.Proxy.2011" />
+		<dependency id="Microsoft.Xrm.Client.2011" />
+		<dependency id="Microsoft.Xrm.Sdk.2011" />
+    </dependencies>
+    <releaseNotes>
+        Profit!
+    </releaseNotes>
+    <tags>settings</tags>
+  </metadata>
+  <files>
+    <file src="..\build\app\KVS.CRM.SolutionPorter.exe" />
+  </files>
+</package>
