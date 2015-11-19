@@ -6,6 +6,7 @@
     <title>Dynamics Crm Solution Exchanger</title>
     <authors>Florian Kroenert (DigitalFlow)</authors>
     <owners>KUMAVISION AG</owners>
+	<projectUrl>https://github.com/DigitalFlow/Dynamics-CRM-Solution-Exchanger.git</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
       Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customization
