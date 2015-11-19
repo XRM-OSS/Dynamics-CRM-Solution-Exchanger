@@ -20,5 +20,6 @@
   <files>
     <file src="..\build\app\KVS.CRM.SolutionPorter.exe" />
 	<file src="..\build\app\*.dll" />
+	<file src="..\CRM-SDK-LicenseTerms.docx" />
   </files>
 </package>
