@@ -1,4 +1,4 @@
-﻿module KVS.Crm.SolutionPorter
+﻿module KVS.Crm.SolutionExchanger
 
 open Microsoft.Xrm.Client
 open Microsoft.Xrm.Sdk

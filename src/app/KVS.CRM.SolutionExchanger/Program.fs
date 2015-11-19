@@ -1,6 +1,6 @@
-﻿module KVS.Crm.SolutionPorterMain
+﻿module KVS.Crm.SolutionExchangerMain
 
-open KVS.Crm.SolutionPorter
+open KVS.Crm.SolutionExchanger
 open System.Globalization
 
 /// Used for determing, whether an argument is a valid parameter. If it starts with the parameter flag, then return the rest
@@ -94,7 +94,7 @@ let Publish args =
 let main argv = 
     if argv.Length < 1 then 
         printf "%s%s%s%s%s%s%s%s" 
-            "Usage SolutionManager.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir:]\n" 
+            "Usage SolutionExchanger.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir:]\n" 
             "/user       -   Required. Username for authenticating with CRM endpoint\n"
             "/password   -   Required. Password for authenticating with CRM endpoint\n"
             "/url        -   Required. Url of CRM endpoint\n"

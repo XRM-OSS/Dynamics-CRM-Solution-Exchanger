@@ -6,7 +6,7 @@ open Fake.AssemblyInfoFile
 open Fake.Git
 open System.IO
 
-let projectName           = "DynamicsCrmSolutionPorter"
+let projectName           = "Dynamics CRM Solution Exchanger"
 
 //Directories
 let buildDir              = @".\build\"
@@ -19,7 +19,7 @@ let packagesDir             = @".\packages\"
 
 
 let nugetDir = @".\nuget\" 
-let nugetDeployDir = @"\\kvdabbuild01\NuGet-Packages"
+let nugetDeployDir = "TBD"
 
 let mutable version         = "1.0"
 let mutable build           = buildVersion
@@ -72,7 +72,7 @@ Target "BuildApp" (fun _->
 Target "CreateNuget" (fun _ ->     
     CreateDir nugetDir
 
-    "DynamicsCrmSolutionPorter.nuspec"
+    "DynamicsCRMSolutionExchanger.nuspec"
           |> NuGet (fun p -> 
             {p with               
                 Project = projectName

@@ -7,12 +7,12 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>b35df6fb-73af-4015-b025-c6b3caa499ac</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>KVS.CRM.SolutionPorter</RootNamespace>
-    <AssemblyName>KVS.CRM.SolutionPorter</AssemblyName>
+    <RootNamespace>KVS.CRM.SolutionExchanger</RootNamespace>
+    <AssemblyName>KVS.CRM.SolutionExchanger</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <Name>KVS.CRM.SolutionPorter</Name>
+    <Name>KVS.CRM.SolutionExchanger</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Debug\KVS.CRM.SolutionPorter.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\KVS.CRM.SolutionExchanger.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
     <StartArguments>
     </StartArguments>
@@ -36,7 +36,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DocumentationFile>bin\Release\KVS.CRM.SolutionPorter.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\KVS.CRM.SolutionExchanger.XML</DocumentationFile>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
@@ -57,7 +57,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="SolutionPorter.fs" />
+    <Compile Include="SolutionExchanger.fs" />
     <None Include="App.config" />
     <Compile Include="Program.fs" />
     <Content Include="packages.config" />
