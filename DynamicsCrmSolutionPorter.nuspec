@@ -12,11 +12,6 @@
       Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customization
     </description>
     <copyright>Copyright KUMAVISION AG</copyright>
-    <dependencies>
-		<dependency id="Microsoft.Crm.Sdk.Proxy.2011" />
-		<dependency id="Microsoft.Xrm.Client.2011" />
-		<dependency id="Microsoft.Xrm.Sdk.2011" />
-    </dependencies>
     <releaseNotes>
         Profit!
     </releaseNotes>
@@ -24,5 +19,6 @@
   </metadata>
   <files>
     <file src="..\build\app\KVS.CRM.SolutionPorter.exe" />
+	<file src="..\build\app\*.dll" />
   </files>
 </package>
