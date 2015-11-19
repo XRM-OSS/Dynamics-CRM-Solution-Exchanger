@@ -19,7 +19,7 @@ let packagesDir             = @".\packages\"
 
 
 let nugetDir = @".\nuget\" 
-let nugetDeployDir = @"\\build\NuGet-Packages"
+let nugetDeployDir = @"\\kvdabbuild01\NuGet-Packages"
 
 let mutable version         = "1.0"
 let mutable build           = buildVersion
