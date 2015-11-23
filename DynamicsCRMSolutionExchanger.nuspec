@@ -11,7 +11,7 @@
     <description>
       Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customization
     </description>
-    <copyright>Copyright KUMAVISION AG</copyright>
+    <licenseUrl>https://github.com/DigitalFlow/Dynamics-CRM-Solution-Exchanger/blob/master/LICENSE</licenseUrl>
     <releaseNotes>
         Profit!
     </releaseNotes>
