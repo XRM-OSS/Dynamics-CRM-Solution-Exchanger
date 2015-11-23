@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "KVS.CRM.SolutionExchanger", "src\app\KVS.CRM.SolutionExchanger\KVS.CRM.SolutionExchanger.fsproj", "{B35DF6FB-73AF-4015-B025-C6B3CAA499AC}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Dynamics.CRM.SolutionExchanger", "src\app\Dynamics.CRM.SolutionExchanger\Dynamics.CRM.SolutionExchanger.fsproj", "{B35DF6FB-73AF-4015-B025-C6B3CAA499AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

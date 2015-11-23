@@ -17,7 +17,7 @@
     </releaseNotes>
   </metadata>
   <files>
-    <file src="..\build\app\KVS.CRM.SolutionExchanger.exe" />
+    <file src="..\build\app\Dynamics.CRM.SolutionExchanger.exe" />
 	<file src="..\build\app\*.dll" />
 	<file src="..\CRM-SDK-LicenseTerms.docx" />
   </files>

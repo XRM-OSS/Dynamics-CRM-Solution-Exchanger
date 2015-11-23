@@ -1,6 +1,6 @@
-﻿module KVS.Crm.SolutionExchangerMain
+﻿module Dynamics.Crm.SolutionExchangerMain
 
-open KVS.Crm.SolutionExchanger
+open Dynamics.Crm.SolutionExchanger
 open System.Globalization
 
 /// Used for determing, whether an argument is a valid parameter. If it starts with the parameter flag, then return the rest
