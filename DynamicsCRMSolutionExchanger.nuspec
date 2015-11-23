@@ -9,7 +9,7 @@
 	<projectUrl>https://github.com/DigitalFlow/Dynamics-CRM-Solution-Exchanger.git</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
-      Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customization
+      Command Line tool for importing and exporting solutions to and from Dynamics CRM, as well as publishing customizations
     </description>
     <licenseUrl>https://github.com/DigitalFlow/Dynamics-CRM-Solution-Exchanger/blob/master/LICENSE</licenseUrl>
     <releaseNotes>
