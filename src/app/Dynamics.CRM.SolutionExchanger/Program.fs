@@ -33,26 +33,55 @@ let Export args =
     let managedString = FindOption "/managed:" args
     let workingDir = FindOption "/workingdir:" args
     let filename = FindOption "/filename:" args
+    let allSolutionsText = FindOption "/allSolutions:" args
+    
+    let allSolutions = 
+        if allSolutionsText.IsSome then
+            let parsedSuccess, parsedValue = bool.TryParse(allSolutionsText.Value) 
+            if parsedSuccess then
+                printf "Set all solutions to %b\n" parsedValue
+                Some parsedValue
+            else
+                printf "%s" "Failed to parse all solutions flag\n"
+                None 
+        else
+            None
 
-    if url.IsNone || user.IsNone || password.IsNone || solution.IsNone || managedString.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s), /password (%s), /solution (%s) and /managed (%s)" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString solution) (OptionToString managedString)
+    if url.IsNone || user.IsNone || password.IsNone || (solution.IsNone && (allSolutions.IsNone || not allSolutions.Value)) || managedString.IsNone then
+        printf "Values missing: Needed /url (%s), /user (%s), /password (%s), /solution (%s) or /allSolutions:true and /managed (%s)" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString solution) (OptionToString managedString)
         1
     else
-        let managed = bool.Parse managedString.Value
+        if allSolutions.IsSome && allSolutions.Value then
+            let managed = bool.Parse managedString.Value
 
-        let solution = ExportSolution (fun cred ->
-                         { cred with
-                            Password = password.Value
-                            Username = user.Value
-                            Url = url.Value
-                         }) solution.Value managed
+            let solutions = ExportAllSolutions (fun cred ->
+                                { cred with
+                                    Password = password.Value
+                                    Username = user.Value
+                                    Url = url.Value
+                                }) managed
 
-        let solutionName = if filename.IsNone then "Solution.zip" else filename.Value
-        let dir = if workingDir.IsNone then "" else workingDir.Value
+            let dir = if workingDir.IsNone then "" else workingDir.Value
+            solutions
+            |> Seq.iter (fun (solution, uniqueName) -> WriteSolutionToFile uniqueName solution dir)
+            0
+        else
+            let managed = bool.Parse managedString.Value
+
+            let solution = ExportSolution (fun cred ->
+                                { cred with
+                                    Password = password.Value
+                                    Username = user.Value
+                                    Url = url.Value
+                                }) solution.Value managed
+
+            let solutionName = if filename.IsNone then "Solution.zip" else filename.Value
+            let dir = if workingDir.IsNone then "" else workingDir.Value
         
-        WriteSolutionToFile solutionName solution dir
-        0
-
+            WriteSolutionToFile solutionName solution dir
+            0
+                
+            
 /// Used for importing solution to CRM
 let Import args = 
     let url = FindOption "/url:" args
@@ -93,15 +122,16 @@ let Publish args =
 [<EntryPoint>]
 let main argv = 
     if argv.Length < 1 then 
-        printf "%s%s%s%s%s%s%s%s" 
-            "Usage SolutionExchanger.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir:]\n" 
-            "/user       -   Required. Username for authenticating with CRM endpoint\n"
-            "/password   -   Required. Password for authenticating with CRM endpoint\n"
-            "/url        -   Required. Url of CRM endpoint\n"
-            "/solution   -   Required if exporting. Unique name of solution to export\n"
-            "/managed    -   Required if exporting. Pass 'true' for exporting managed, false for unmanaged\n"
-            "/filename   -   Required if importing. Pass full path to solution. If Exporting sets name of exported solution file\n"
-            "/workingdir -   Sets working directory for writing exported solution to file\n"
+        printf "%s%s%s%s%s%s%s%s%s" 
+            "Usage SolutionExchanger.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir: | /allSolutions:]\n" 
+            "/user          -   Required. Username for authenticating with CRM endpoint\n"
+            "/password      -   Required. Password for authenticating with CRM endpoint\n"
+            "/url           -   Required. Url of CRM endpoint\n"
+            "/solution      -   Required if exporting. Unique name of solution to export. Can be replaced by allSolutions to get all unmanaged solutions in organization\n"
+            "/allSolutions  -   Pass like /allSolutions:true to Export all managed solutions in organization\n"
+            "/managed       -   Required if exporting. Pass 'true' for exporting managed, false for unmanaged\n"
+            "/filename      -   Required if importing. Pass full path to solution. If Exporting sets name of exported solution file\n"
+            "/workingdir    -   Sets working directory for writing exported solution to file\n"
         1 
     else
         match argv.[0].ToLowerInvariant() with

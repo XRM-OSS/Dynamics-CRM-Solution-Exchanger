@@ -2,6 +2,7 @@
 
 open Microsoft.Xrm.Client
 open Microsoft.Xrm.Sdk
+open Microsoft.Xrm.Sdk.Query
 open Microsoft.Xrm.Sdk.Client
 open Microsoft.Xrm.Client.Services
 open Microsoft.Crm.Sdk.Messages
@@ -10,6 +11,8 @@ open System.Configuration
 open System.IO
 open System.ServiceModel.Description
 open System.Diagnostics
+open System.Collections.ObjectModel
+open System.Collections.Generic
 
 type CrmEndpointParams =
     {
@@ -25,6 +28,18 @@ let CrmEndpointDefaults =
         Password = ""
     }
 
+/// Query all solutions in system
+let internal RetrieveAllSolutions (service : IOrganizationService) =
+    let query = 
+        new QueryExpression ( 
+            ColumnSet = new ColumnSet(true), 
+            Criteria = new FilterExpression (FilterOperator = LogicalOperator.And),
+            EntityName = "solution")
+
+    query.Criteria.AddCondition(new ConditionExpression("ismanaged", ConditionOperator.Equal, false))
+    
+    service.RetrieveMultiple(query)
+
 /// Creates Organization Service for communicating with Dynamics CRM
 /// ## Parameters
 ///
@@ -33,6 +48,7 @@ let CrmEndpointDefaults =
 ///  - `url` - URL that is used to connect to CRM
 let private CreateOrganizationService username password url =
     printfn "Creating Organization Service: %A" url
+    
     try
         let credentials = new ClientCredentials()
         credentials.UserName.UserName <- username
@@ -79,14 +95,32 @@ let WriteSolutionToFile fileName solution path =
 ///  - `managed` - Boolean: True for exporting as managed solution, false for exporting as unmanaged
 let ExportSolution crmEndpoint solutionName (managed : bool) =
     printfn "Exporting solution %A" (solutionName + ": " + if managed then "Managed" else "Unmanaged")
+    
     let serviceParams = crmEndpoint CrmEndpointDefaults
     let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
+    
     let exportSolutionRequest = new ExportSolutionRequest( Managed = managed, SolutionName = solutionName )
     let response = organizationService.Value.Execute(exportSolutionRequest) :?> ExportSolutionResponse
+    
     printfn "Successfully exported solution"
     response.ExportSolutionFile
+
+/// Comment
+let ExportAllSolutions crmEndpoint managed =
+    printfn "Retrieving all unmanaged solutions in Organization"
+    
+    let serviceParams = crmEndpoint CrmEndpointDefaults
+    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    
+    if organizationService.IsNone then
+        failwith "Could not create connection to CRM, check your endpoint config"
+    
+    (RetrieveAllSolutions organizationService.Value).Entities
+    |> Seq.map (fun solution -> 
+        (ExportSolution crmEndpoint (solution.GetAttributeValue<string>("uniquename")) managed, solution.GetAttributeValue<string>("uniquename")))
 
 /// Imports zipped solution file to Dynamics CRM
 /// ## Parameters
