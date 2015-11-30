@@ -45,7 +45,11 @@ let internal RetrieveAllSolutions (service : IOrganizationService) =
     // Skip "Basic" solution
     query.Criteria.AddCondition(new ConditionExpression("solutionid", ConditionOperator.NotEqual, Guid("25a01723-9f63-4449-a3e0-046cc23a2902")))
     
-    service.RetrieveMultiple(query)
+    try
+        Some(service.RetrieveMultiple(query))
+    with 
+    | ex -> printf "Encountered exception during retrieval of solutions: %s" ex.Message
+            None
 
 let internal DiscoverOrganizations crmEndpoint =
     let serviceParams = crmEndpoint CrmEndpointDefaults
@@ -78,7 +82,7 @@ let private CreateOrganizationService username password url =
         printfn "Successfully created organization service"
         Some(proxy :> IOrganizationService)
     with   
-        | ex -> failwith (sprintf "Error while creating organization service: %A" ex.Message)
+    | ex -> failwith (sprintf "Error while creating organization service: %A" ex.Message)
 
 /// Publishes all solution component changes.
 /// ## Parameters
@@ -130,8 +134,8 @@ let ExportSolution crmEndpoint solutionName (managed : bool) =
         printfn "Successfully exported solution"
         Some(response.ExportSolutionFile)
     with
-        | ex -> printfn "Exception occured! Message: %s, Stack Trace: %s" ex.Message ex.StackTrace
-                None
+    | ex -> printfn "Exception occured! Message: %s, Stack Trace: %s" ex.Message ex.StackTrace
+            None
                 
 
 /// Comment
@@ -144,10 +148,21 @@ let ExportAllSolutions crmEndpoint managed =
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
     
-    (RetrieveAllSolutions organizationService.Value).Entities
+    let solutions = (RetrieveAllSolutions organizationService.Value)
+
+    if solutions.IsNone then
+        failwith (sprintf "Failed to retrieve solutions for organization %s\n" serviceParams.Url)
+
+    solutions.Value.Entities
     |> Seq.map (fun solution -> 
-        printf "Found solution %s, ID: %s\n" (solution.GetAttributeValue<string>("uniquename")) (solution.GetAttributeValue<Guid>("solutionid").ToString())
-        (ExportSolution crmEndpoint (solution.GetAttributeValue<string>("uniquename")) managed, solution.GetAttributeValue<string>("uniquename")))
+        try
+            printf "Found solution %s, ID: %s\n" (solution.GetAttributeValue<string>("uniquename")) (solution.GetAttributeValue<Guid>("solutionid").ToString())
+            Some (ExportSolution crmEndpoint (solution.GetAttributeValue<string>("uniquename")) managed, solution.GetAttributeValue<string>("uniquename"))
+        with
+        | ex -> printf "Encountered Exception: %s\n" ex.Message
+                None)
+    |> Seq.filter(fun solution -> solution.IsSome)
+    |> Seq.map(fun solution -> solution.Value)
 
 /// Comment
 let ExportAllOrganizations crmEndpoint managed =
@@ -156,11 +171,17 @@ let ExportAllOrganizations crmEndpoint managed =
     let organizations = DiscoverOrganizations crmEndpoint
     organizations
     |> Seq.map(fun organization -> 
-        organization.FriendlyName, ExportAllSolutions (fun endpoint -> { endpoint with  
-                                                                            // Retrieve endpoint at index 1, because this is the organization service
-                                                                            Url = Seq.item 1 (organization.Endpoints.Values)
-                                                                            Username = serviceParams.Username
-                                                                            Password = serviceParams.Password }) managed)
+                try
+                    Some (organization.FriendlyName, ExportAllSolutions (fun endpoint -> { endpoint with  
+                                                                                            // Retrieve endpoint at index 1, because this is the organization service
+                                                                                            Url = Seq.item 1 (organization.Endpoints.Values)
+                                                                                            Username = serviceParams.Username
+                                                                                            Password = serviceParams.Password }) managed)
+                with 
+                | ex -> printf "Encountered exception: %s\n" ex.Message
+                        None)
+    |> Seq.filter(fun solution -> solution.IsSome)
+    |> Seq.map(fun solution -> solution.Value)
 
 /// Imports zipped solution file to Dynamics CRM
 /// ## Parameters
