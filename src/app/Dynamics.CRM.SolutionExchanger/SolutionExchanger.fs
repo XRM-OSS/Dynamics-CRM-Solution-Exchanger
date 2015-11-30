@@ -4,6 +4,7 @@ open Microsoft.Xrm.Client
 open Microsoft.Xrm.Sdk
 open Microsoft.Xrm.Sdk.Query
 open Microsoft.Xrm.Sdk.Client
+open Microsoft.Xrm.Sdk.Discovery
 open Microsoft.Xrm.Client.Services
 open Microsoft.Crm.Sdk.Messages
 open System
@@ -37,8 +38,26 @@ let internal RetrieveAllSolutions (service : IOrganizationService) =
             EntityName = "solution")
 
     query.Criteria.AddCondition(new ConditionExpression("ismanaged", ConditionOperator.Equal, false))
+    // Skip "default" solution
+    query.Criteria.AddCondition(new ConditionExpression("solutionid", ConditionOperator.NotEqual, Guid("FD140AAF-4DF4-11DD-BD17-0019B9312238")))
+    // Skip "active" solution
+    query.Criteria.AddCondition(new ConditionExpression("solutionid", ConditionOperator.NotEqual, Guid("FD140AAE-4DF4-11DD-BD17-0019B9312238")))
+    // Skip "Basic" solution
+    query.Criteria.AddCondition(new ConditionExpression("solutionid", ConditionOperator.NotEqual, Guid("25a01723-9f63-4449-a3e0-046cc23a2902")))
     
     service.RetrieveMultiple(query)
+
+let internal DiscoverOrganizations crmEndpoint =
+    let serviceParams = crmEndpoint CrmEndpointDefaults
+    let credentials = new ClientCredentials()
+    
+    credentials.UserName.UserName <- serviceParams.Username
+    credentials.UserName.Password <- serviceParams.Password
+    
+    let discoveryService = new DiscoveryServiceProxy(new Uri(serviceParams.Url), null, credentials, null)
+    let discoveryRequest = new RetrieveOrganizationsRequest(AccessType = EndpointAccessType.Default, Release = OrganizationRelease.Current)
+    let discoveryResponse = discoveryService.Execute(discoveryRequest) :?> RetrieveOrganizationsResponse
+    discoveryResponse.Details
 
 /// Creates Organization Service for communicating with Dynamics CRM
 /// ## Parameters
@@ -83,7 +102,9 @@ let PublishAll crmEndpoint =
 ///  - `path` - Path to write file to, be sure to pass with trailing backslash
 let WriteSolutionToFile fileName solution path = 
     printfn "Writing solution to file %A" (path + fileName)
-    let filePath = path + fileName
+    if not (Directory.Exists path) then
+        Directory.CreateDirectory(path) |> ignore
+    let filePath = Path.Combine(path, fileName)
     File.WriteAllBytes(filePath, solution)
     printfn "Successfully wrote solution to file"
             
@@ -103,10 +124,15 @@ let ExportSolution crmEndpoint solutionName (managed : bool) =
         failwith "Could not create connection to CRM, check your endpoint config"
     
     let exportSolutionRequest = new ExportSolutionRequest( Managed = managed, SolutionName = solutionName )
-    let response = organizationService.Value.Execute(exportSolutionRequest) :?> ExportSolutionResponse
     
-    printfn "Successfully exported solution"
-    response.ExportSolutionFile
+    try
+        let response = organizationService.Value.Execute(exportSolutionRequest) :?> ExportSolutionResponse
+        printfn "Successfully exported solution"
+        Some(response.ExportSolutionFile)
+    with
+        | ex -> printfn "Exception occured! Message: %s, Stack Trace: %s" ex.Message ex.StackTrace
+                None
+                
 
 /// Comment
 let ExportAllSolutions crmEndpoint managed =
@@ -120,7 +146,21 @@ let ExportAllSolutions crmEndpoint managed =
     
     (RetrieveAllSolutions organizationService.Value).Entities
     |> Seq.map (fun solution -> 
+        printf "Found solution %s, ID: %s" (solution.GetAttributeValue<string>("uniquename")) (solution.GetAttributeValue<Guid>("solutionid").ToString())
         (ExportSolution crmEndpoint (solution.GetAttributeValue<string>("uniquename")) managed, solution.GetAttributeValue<string>("uniquename")))
+
+/// Comment
+let ExportAllOrganizations crmEndpoint managed =
+    let serviceParams = crmEndpoint CrmEndpointDefaults
+
+    let organizations = DiscoverOrganizations crmEndpoint
+    organizations
+    |> Seq.map(fun organization -> 
+        organization.FriendlyName, ExportAllSolutions (fun endpoint -> { endpoint with  
+                                                                            // Retrieve endpoint at index 1, because this is the organization service
+                                                                            Url = Seq.item 1 (organization.Endpoints.Values)
+                                                                            Username = serviceParams.Username
+                                                                            Password = serviceParams.Password }) managed)
 
 /// Imports zipped solution file to Dynamics CRM
 /// ## Parameters
