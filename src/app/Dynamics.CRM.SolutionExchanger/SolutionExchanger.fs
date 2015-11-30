@@ -101,7 +101,7 @@ let PublishAll crmEndpoint =
 ///  - `solution` - Solution as byte[] that was retrieved from ExportSolution
 ///  - `path` - Path to write file to, be sure to pass with trailing backslash
 let WriteSolutionToFile fileName solution path = 
-    printfn "Writing solution to file %A" (path + fileName)
+    printfn "Writing solution to file %A" (Path.Combine(path, fileName))
     if not (Directory.Exists path) then
         Directory.CreateDirectory(path) |> ignore
     let filePath = Path.Combine(path, fileName)
@@ -146,7 +146,7 @@ let ExportAllSolutions crmEndpoint managed =
     
     (RetrieveAllSolutions organizationService.Value).Entities
     |> Seq.map (fun solution -> 
-        printf "Found solution %s, ID: %s" (solution.GetAttributeValue<string>("uniquename")) (solution.GetAttributeValue<Guid>("solutionid").ToString())
+        printf "Found solution %s, ID: %s\n" (solution.GetAttributeValue<string>("uniquename")) (solution.GetAttributeValue<Guid>("solutionid").ToString())
         (ExportSolution crmEndpoint (solution.GetAttributeValue<string>("uniquename")) managed, solution.GetAttributeValue<string>("uniquename")))
 
 /// Comment

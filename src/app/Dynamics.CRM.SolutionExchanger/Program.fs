@@ -63,7 +63,7 @@ let Export args =
             None
 
     if url.IsNone || user.IsNone || password.IsNone || (solution.IsNone && (allSolutions.IsNone || not allSolutions.Value) && (allOrganizations.IsNone || not allOrganizations.Value)) || managedString.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s), /password (%s), (/solution (%s) or /allSolutions:true or allOrganizations:true) and /managed (%s)" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString solution) (OptionToString managedString)
+        printf "Values missing: Needed /url (%s), /user (%s), /password (%s), (/solution (%s) or /allSolutions:true or allOrganizations:true) and /managed (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString solution) (OptionToString managedString)
         1
     else
         if allSolutions.IsSome && allSolutions.Value then
@@ -81,7 +81,7 @@ let Export args =
                     if solution.IsSome then
                         WriteSolutionToFile (uniqueName + ".zip") solution.Value dir
                     else
-                        printf "Skipping solution %s, since it has no value." uniqueName)
+                        printf "Skipping solution %s, since it has no value.\n" uniqueName)
             0
         else if allOrganizations.IsSome && allOrganizations.Value then
             let solutions = ExportAllOrganizations (fun cred ->
@@ -100,7 +100,7 @@ let Export args =
                             if solution.IsSome then 
                                 WriteSolutionToFile (uniqueName + ".zip") solution.Value (Path.Combine(dir, friendlyName))
                             else
-                                printf "Skipping solution %s, since it has no value." uniqueName))
+                                printf "Skipping solution %s, since it has no value.\n" uniqueName))
             0
         else
             let solution = ExportSolution (fun cred ->
@@ -111,7 +111,7 @@ let Export args =
                                 }) solution.Value managed
 
             if solution.IsNone then
-                failwith "Failed to export solution. Please check, whether the solution might be corrupted. Exiting"
+                failwith "Failed to export solution. Please check, whether the solution might be corrupted. Exiting\n"
 
             let solutionName = if filename.IsNone then "Solution.zip" else filename.Value
             let dir = if workingDir.IsNone then "" else workingDir.Value
@@ -128,7 +128,7 @@ let Import args =
     let filename = FindOption "/filename:" args
 
     if url.IsNone || user.IsNone || password.IsNone || filename.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s), /password (%s) and /filename (%s)" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString filename)
+        printf "Values missing: Needed /url (%s), /user (%s), /password (%s) and /filename (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString filename)
         1
     else
         ImportSolution (fun cred ->
@@ -146,7 +146,7 @@ let Publish args =
     let password = FindOption "/password:" args
 
     if url.IsNone || user.IsNone || password.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s) and /password (%s)" (OptionToString url) (OptionToString user) (OptionToString password)
+        printf "Values missing: Needed /url (%s), /user (%s) and /password (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password)
         1
     else
         PublishAll (fun cred ->
@@ -177,5 +177,5 @@ let main argv =
         | "export" -> Export argv
         | "import" -> Import argv
         | "publish" -> Publish argv
-        | _ -> printf "Either enter 'export', 'import' or 'publish' as first parameter!"
+        | _ -> printf "Either enter 'export', 'import' or 'publish' as first parameter!\n"
                1
