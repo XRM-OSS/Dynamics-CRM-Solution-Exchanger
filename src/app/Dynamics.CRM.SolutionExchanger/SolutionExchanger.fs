@@ -8,26 +8,40 @@ open Microsoft.Xrm.Sdk.Discovery
 open Microsoft.Xrm.Client.Services
 open Microsoft.Crm.Sdk.Messages
 open System
+open System.Net
 open System.Configuration
 open System.IO
 open System.ServiceModel.Description
 open System.Diagnostics
 open System.Collections.ObjectModel
 open System.Collections.Generic
+open System.ServiceModel
+open System.ServiceModel.Security
 
 type CrmEndpointParams =
     {
         Url : string
-        Username : string
-        Password : string
+        Username : string option
+        Password : string option
     }
 
 let CrmEndpointDefaults = 
     {
         Url = ""
-        Username = ""
-        Password = ""
+        Username = None
+        Password = None
     }
+
+/// Sets given credentials or if not present default credentials for user
+let internal GetCredentials (username : string option) (password : string option) =
+    let credentials = new ClientCredentials()
+    
+    if username.IsSome && not (String.IsNullOrEmpty username.Value) && password.IsSome && not (String.IsNullOrEmpty password.Value) then
+        credentials.UserName.UserName <- username.Value
+        credentials.UserName.Password <- password.Value
+    else     
+        credentials.Windows.ClientCredential <- (CredentialCache.DefaultCredentials :?> NetworkCredential)
+    credentials 
 
 /// Query all solutions in system
 let internal RetrieveAllSolutions (service : IOrganizationService) =
@@ -53,16 +67,13 @@ let internal RetrieveAllSolutions (service : IOrganizationService) =
 
 let internal DiscoverOrganizations crmEndpoint =
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let credentials = new ClientCredentials()
-    
-    credentials.UserName.UserName <- serviceParams.Username
-    credentials.UserName.Password <- serviceParams.Password
+    let credentials = GetCredentials serviceParams.Username serviceParams.Password
     
     let discoveryService = new DiscoveryServiceProxy(new Uri(serviceParams.Url), null, credentials, null)
     let discoveryRequest = new RetrieveOrganizationsRequest(AccessType = EndpointAccessType.Default, Release = OrganizationRelease.Current)
     let discoveryResponse = discoveryService.Execute(discoveryRequest) :?> RetrieveOrganizationsResponse
     discoveryResponse.Details
-
+    
 /// Creates Organization Service for communicating with Dynamics CRM
 /// ## Parameters
 ///
@@ -73,9 +84,7 @@ let private CreateOrganizationService username password url =
     printfn "Creating Organization Service: %A" url
     
     try
-        let credentials = new ClientCredentials()
-        credentials.UserName.UserName <- username
-        credentials.UserName.Password <- password
+        let credentials = GetCredentials username password
         let serviceUri = new Uri(url)
         let proxy = new OrganizationServiceProxy(serviceUri, null, credentials, null)
         proxy.EnableProxyTypes()

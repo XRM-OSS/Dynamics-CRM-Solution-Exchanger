@@ -20,9 +20,9 @@ let FindOption (opt : string) (args : string[]) =
     Seq.tryFind(fun res -> res <> "") results
 
 /// Used for transforming string options, returns "Present" if value was set, else "missing"
-let OptionToString (opt : string option)=
+let OptionToString (opt : option<'T>)=
     match opt with
-    | Some str -> "Present"
+    | Some value -> "Present"
     | None -> "Missing"
 
 /// Used for exporting solution from CRM and saving it to file
@@ -36,8 +36,7 @@ let Export args =
     let filename = FindOption "/filename:" args
     let allSolutionsText = FindOption "/allSolutions:" args
     let allOrganizationsText = FindOption "/allOrganizations:" args
-    let managed = bool.Parse managedString.Value
-
+    
     let allSolutions = 
         if allSolutionsText.IsSome then
             let parsedSuccess, parsedValue = bool.TryParse(allSolutionsText.Value) 
@@ -46,6 +45,18 @@ let Export args =
                 Some parsedValue
             else
                 printf "%s" "Failed to parse all solutions flag\n"
+                None 
+        else
+            None
+
+    let managed = 
+        if managedString.IsSome then
+            let parsedSuccess, parsedValue = bool.TryParse(managedString.Value) 
+            if parsedSuccess then
+                printf "Set managed to %b\n" parsedValue
+                Some parsedValue
+            else
+                printf "%s" "Failed to parse managed flag\n"
                 None 
         else
             None
@@ -62,17 +73,17 @@ let Export args =
         else
             None
 
-    if url.IsNone || user.IsNone || password.IsNone || (solution.IsNone && (allSolutions.IsNone || not allSolutions.Value) && (allOrganizations.IsNone || not allOrganizations.Value)) || managedString.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s), /password (%s), (/solution (%s) or /allSolutions:true or allOrganizations:true) and /managed (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString solution) (OptionToString managedString)
+    if url.IsNone || (solution.IsNone && (allSolutions.IsNone || not allSolutions.Value) && (allOrganizations.IsNone || not allOrganizations.Value)) || managed.IsNone then
+        printf "Values missing: Needed /url (%s), (/solution (%s) or /allSolutions:true or allOrganizations:true) and /managed (%s)\n" (OptionToString url) (OptionToString solution) (OptionToString managed)
         1
     else
         if allSolutions.IsSome && allSolutions.Value then
             let solutions = ExportAllSolutions (fun cred ->
                                 { cred with
-                                    Password = password.Value
-                                    Username = user.Value
+                                    Password = password
+                                    Username = user
                                     Url = url.Value
-                                }) managed
+                                }) managed.Value
 
             let dir = if workingDir.IsNone then "" else workingDir.Value
             
@@ -86,13 +97,14 @@ let Export args =
         else if allOrganizations.IsSome && allOrganizations.Value then
             let solutions = ExportAllOrganizations (fun cred ->
                                 { cred with
-                                    Password = password.Value
-                                    Username = user.Value
+                                    Password = password
+                                    Username = user
                                     Url = url.Value
-                                }) managed
+                                }) managed.Value
 
             let dir = if workingDir.IsNone then "" else workingDir.Value
             
+            // Write all solutions into a directory called like the organization
             solutions
                 |> Seq.iter(fun (friendlyName, solutions) ->
                     solutions
@@ -105,10 +117,10 @@ let Export args =
         else
             let solution = ExportSolution (fun cred ->
                                 { cred with
-                                    Password = password.Value
-                                    Username = user.Value
+                                    Password = password
+                                    Username = user
                                     Url = url.Value
-                                }) solution.Value managed
+                                }) solution.Value managed.Value
 
             if solution.IsNone then
                 failwith "Failed to export solution. Please check, whether the solution might be corrupted. Exiting\n"
@@ -133,8 +145,8 @@ let Import args =
     else
         ImportSolution (fun cred ->
                              { cred with
-                                    Password = password.Value
-                                    Username = user.Value
+                                    Password = password
+                                    Username = user
                                     Url = url.Value
                              }) filename.Value
         0
@@ -151,8 +163,8 @@ let Publish args =
     else
         PublishAll (fun cred ->
                         { cred with
-                            Password = password.Value
-                            Username = user.Value
+                            Password = password
+                            Username = user
                             Url = url.Value
                         })
         0
@@ -162,8 +174,8 @@ let main argv =
     if argv.Length < 1 then 
         printf "%s%s%s%s%s%s%s%s%s%s" 
             "Usage SolutionExchanger.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir: | /allSolutions: | /allOrganizations:]\n" 
-            "/user              -   Required. Username for authenticating with CRM endpoint\n"
-            "/password          -   Required. Password for authenticating with CRM endpoint\n"
+            "/user              -   Username for authenticating with CRM endpoint. If no user and password are given, fallback to default credentials\n"
+            "/password          -   Password for authenticating with CRM endpoint. If no user and password are given, fallback to default credentials\n"
             "/url               -   Required. Url of CRM endpoint\n"
             "/solution          -   Required if exporting. Unique name of solution to export. Can be replaced by allSolutions to get all unmanaged solutions in organization\n"
             "/allSolutions      -   Pass like /allSolutions:true to Export all unmanaged solutions in organization\n"
