@@ -1,22 +1,14 @@
 ﻿module Dynamics.Crm.SolutionExchanger
 
-open Microsoft.Xrm.Client
+open System
+open System.Net
+open System.IO
+open System.ServiceModel.Description
 open Microsoft.Xrm.Sdk
 open Microsoft.Xrm.Sdk.Query
 open Microsoft.Xrm.Sdk.Client
 open Microsoft.Xrm.Sdk.Discovery
-open Microsoft.Xrm.Client.Services
 open Microsoft.Crm.Sdk.Messages
-open System
-open System.Net
-open System.Configuration
-open System.IO
-open System.ServiceModel.Description
-open System.Diagnostics
-open System.Collections.ObjectModel
-open System.Collections.Generic
-open System.ServiceModel
-open System.ServiceModel.Security
 
 type CrmEndpointParams =
     {
@@ -183,7 +175,7 @@ let ExportAllOrganizations crmEndpoint managed =
                 try
                     Some (organization.FriendlyName, ExportAllSolutions (fun endpoint -> { endpoint with  
                                                                                             // Retrieve endpoint at index 1, because this is the organization service
-                                                                                            Url = Seq.item 1 (organization.Endpoints.Values)
+                                                                                            Url = Seq.nth 1 (organization.Endpoints.Values)
                                                                                             Username = serviceParams.Username
                                                                                             Password = serviceParams.Password }) managed)
                 with 
