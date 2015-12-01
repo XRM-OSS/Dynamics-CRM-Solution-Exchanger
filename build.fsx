@@ -32,7 +32,7 @@ let gitbranch = Git.Information.getBranchName "."
 let sha = Git.Information.getCurrentHash()
 
 Target "Clean" (fun _ ->
-    CleanDirs [buildDir; deployDir]
+    CleanDirs [buildDir; deployDir; nugetDir]
 )
 
 Target "RestorePackages" (fun _ ->
