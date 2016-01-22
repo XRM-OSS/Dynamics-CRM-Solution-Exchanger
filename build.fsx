@@ -64,6 +64,15 @@ Target "AssemblyInfo" (fun _ ->
 )
 
 Target "BuildApp" (fun _->
+    let SetMSBuildToolsVersion (toolsVersion:string option) =
+        trace "Setting MSBuild tools version..."
+
+        match toolsVersion with
+        | Some version -> MSBuildHelper.MSBuildDefaults <- { MSBuildHelper.MSBuildDefaults with ToolsVersion = toolsVersion }
+        | None -> trace "No MSBuild tools version provided, using default."
+
+    Some "4.0" |> SetMSBuildToolsVersion
+        
     !! @"src\app\**\*.fsproj"
       |> MSBuildRelease appBuildDir "Build"
       |> Log "Build - Output: "
