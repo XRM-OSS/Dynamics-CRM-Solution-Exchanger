@@ -10,7 +10,7 @@ open Microsoft.Xrm.Sdk.Client
 open Microsoft.Xrm.Sdk.Discovery
 open Microsoft.Crm.Sdk.Messages
 
-let internal _timeOutDefaults = new TimeSpan(10, 0, 0)
+let internal _timeOutDefaults = new TimeSpan(0, 10, 0)
 
 type CrmEndpointParams =
     {
@@ -86,8 +86,10 @@ let private CreateOrganizationService username password url (timeout:int option)
         proxy.EnableProxyTypes()
 
         if timeout.IsSome then
+            printfn "Setting timeout for service to %i Minutes\n" timeout.Value
             proxy.Timeout <- new TimeSpan(0, timeout.Value, 0)
         else 
+            printfn "No timeout set, falling back to default of %f minutes\n" _timeOutDefaults.TotalMinutes
             proxy.Timeout <- _timeOutDefaults
 
         printfn "Successfully created organization service"
@@ -118,7 +120,9 @@ let PublishAll crmEndpoint =
 let WriteSolutionToFile fileName solution path = 
     printfn "Writing solution to file %A" (Path.Combine(path, fileName))
     if not (Directory.Exists path) then
+        printfn "Destination path %s does not exist, creating directories\n" path
         Directory.CreateDirectory(path) |> ignore
+        printfn "Successfully created path"
     let filePath = Path.Combine(path, fileName)
     File.WriteAllBytes(filePath, solution)
     printfn "Successfully wrote solution to file"

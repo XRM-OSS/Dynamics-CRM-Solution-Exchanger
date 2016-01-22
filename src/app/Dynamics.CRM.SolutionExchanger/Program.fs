@@ -35,7 +35,7 @@ let ExportAllSolutions password user (url:string option) (managed:bool option) (
                                     TimeOut = timeOut
                                 }) managed.Value
 
-    let dir = if workingDir.IsNone then "" else workingDir.Value
+    let dir = if workingDir.IsNone then @".\" else workingDir.Value
             
     solutions
         |> Seq.iter (fun (solution, uniqueName) -> 
@@ -54,7 +54,7 @@ let ExportAllOrganizations password user (url:string option) (managed:bool optio
                                     TimeOut = timeOut
                                 }) managed.Value
 
-    let dir = if workingDir.IsNone then "" else workingDir.Value
+    let dir = if workingDir.IsNone then @".\" else workingDir.Value
             
     // Write all solutions into a directory called like the organization
     solutions
@@ -81,7 +81,7 @@ let ExportSolution password user (url:string option) (sol:string option) (filena
 
     let solutionName = if filename.IsNone then "Solution.zip" else filename.Value
     
-    let dir = if workingDir.IsNone then "" else workingDir.Value
+    let dir = if workingDir.IsNone then @".\" else workingDir.Value
         
     WriteSolutionToFile solutionName solution.Value dir
     0
