@@ -10,11 +10,14 @@ open Microsoft.Xrm.Sdk.Client
 open Microsoft.Xrm.Sdk.Discovery
 open Microsoft.Crm.Sdk.Messages
 
+let internal _timeOutDefaults = new TimeSpan(10, 0, 0)
+
 type CrmEndpointParams =
     {
         Url : string
         Username : string option
         Password : string option
+        TimeOut: int option
     }
 
 let CrmEndpointDefaults = 
@@ -22,6 +25,7 @@ let CrmEndpointDefaults =
         Url = ""
         Username = None
         Password = None
+        TimeOut = Some 10
     }
 
 /// Sets given credentials or if not present default credentials for user
@@ -72,7 +76,7 @@ let internal DiscoverOrganizations crmEndpoint =
 ///  - `username` - Username for authentication
 ///  - `password` - Password for authentication
 ///  - `url` - URL that is used to connect to CRM
-let private CreateOrganizationService username password url =
+let private CreateOrganizationService username password url (timeout:int option) =
     printfn "Creating Organization Service: %A" url
     
     try
@@ -80,6 +84,12 @@ let private CreateOrganizationService username password url =
         let serviceUri = new Uri(url)
         let proxy = new OrganizationServiceProxy(serviceUri, null, credentials, null)
         proxy.EnableProxyTypes()
+
+        if timeout.IsSome then
+            proxy.Timeout <- new TimeSpan(0, timeout.Value, 0)
+        else 
+            proxy.Timeout <- _timeOutDefaults
+
         printfn "Successfully created organization service"
         Some(proxy :> IOrganizationService)
     with   
@@ -92,7 +102,7 @@ let private CreateOrganizationService username password url =
 let PublishAll crmEndpoint =
     printfn "Publishing all"
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
     let publishRequest = new PublishAllXmlRequest()
@@ -123,7 +133,7 @@ let ExportSolution crmEndpoint solutionName (managed : bool) =
     printfn "Exporting solution %A" (solutionName + ": " + if managed then "Managed" else "Unmanaged")
     
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
     
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
@@ -144,7 +154,7 @@ let ExportAllSolutions crmEndpoint managed =
     printfn "Retrieving all unmanaged solutions in Organization"
     
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
     
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
@@ -192,7 +202,7 @@ let ExportAllOrganizations crmEndpoint managed =
 let ImportSolution crmEndpoint path =
     printfn "Importing solution %A" path
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url
+    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
     if organizationService.IsNone then
         failwith "Could not create connection to CRM, check your endpoint config"
     if not (File.Exists(path)) then
