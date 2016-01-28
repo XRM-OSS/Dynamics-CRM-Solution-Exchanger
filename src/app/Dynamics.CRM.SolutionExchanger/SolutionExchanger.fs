@@ -191,7 +191,8 @@ let ExportAllOrganizations crmEndpoint managed =
                                                                                             // Retrieve endpoint at index 1, because this is the organization service
                                                                                             Url = Seq.nth 1 (organization.Endpoints.Values)
                                                                                             Username = serviceParams.Username
-                                                                                            Password = serviceParams.Password }) managed)
+                                                                                            Password = serviceParams.Password 
+                                                                                            TimeOut = serviceParams.TimeOut}) managed)
                 with 
                 | ex -> printf "Encountered exception: %s\n" ex.Message
                         None)
