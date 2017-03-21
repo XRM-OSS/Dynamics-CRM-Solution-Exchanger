@@ -150,8 +150,8 @@ let Import args =
     let timeOutText = FindOption "/timeout:" args
     let timeOut = parseInt timeOutText "timeout"
 
-    if url.IsNone || user.IsNone || password.IsNone || filename.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s), /password (%s) and /filename (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password) (OptionToString filename)
+    if url.IsNone || filename.IsNone then
+        printf "Values missing: Needed /url (%s) and /filename (%s)\n" (OptionToString url) (OptionToString filename)
         1
     else
         ImportSolution (fun cred ->
@@ -173,8 +173,8 @@ let Publish args =
     let timeOut = parseInt timeOutText "timeout"
 
 
-    if url.IsNone || user.IsNone || password.IsNone then
-        printf "Values missing: Needed /url (%s), /user (%s) and /password (%s)\n" (OptionToString url) (OptionToString user) (OptionToString password)
+    if url.IsNone then
+        printf "Values missing: Needed /url (%s)\n" (OptionToString url)
         1
     else
         PublishAll (fun cred ->

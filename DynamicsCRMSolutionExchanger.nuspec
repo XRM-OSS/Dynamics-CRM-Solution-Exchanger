@@ -5,7 +5,7 @@
     <version>1.0.0</version>
     <title>Dynamics CRM Solution Exchanger</title>
     <authors>Florian Kroenert (DigitalFlow)</authors>
-    <owners>KUMAVISION AG</owners>
+    <owners>Florian Kroenert (DigitalFlow)</owners>
 	<projectUrl>https://github.com/DigitalFlow/Dynamics-CRM-Solution-Exchanger.git</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>

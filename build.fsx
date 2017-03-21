@@ -19,7 +19,6 @@ let packagesDir             = @".\packages\"
 
 
 let nugetDir = @".\nuget\" 
-let nugetDeployDir = "TBD"
 
 let mutable version         = "1.0"
 let mutable build           = buildVersion
@@ -93,8 +92,13 @@ Target "CreateNuget" (fun _ ->
 
 )
 
-Target "PublishNugetToFeed" (fun _ ->
-    XCopy nugetDir nugetDeployDir 
+Target "PublishNuget" (fun _ ->
+
+  let nugetPublishDir = (deployDir + "nuget")
+  CreateDir nugetPublishDir
+
+  !! (nugetDir + "*.nupkg")
+     |> Copy nugetPublishDir
 )
 
 Target "Publish" (fun _ ->
@@ -119,7 +123,7 @@ Target "Zip" (fun _ ->
   ==> "Zip"
   ==> "Publish"
   ==> "CreateNuget"
-  ==> "PublishNugetToFeed"
+  ==> "PublishNuget"
 
 
 RunTargetOrDefault "Publish"
