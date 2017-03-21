@@ -48,11 +48,6 @@ Target "BuildVersions" (fun _ ->
     setupVersion    <- safeBuildNumber
     nugetVersion    <- safeBuildNumber
 
-    match gitbranch with
-        | "master" -> ()
-        | "develop" -> (nugetVersion <- nugetVersion + " - " + "beta")
-        | _ -> (nugetVersion <- nugetVersion + " - " + gitbranch)
-
     SetBuildNumber nugetVersion
 )
 Target "AssemblyInfo" (fun _ ->
