@@ -42,11 +42,11 @@ Target "BuildVersions" (fun _ ->
 
     let safeBuildNumber = if not isLocalBuild then build else "0"
 
-    asmVersion      <- version + "." + safeBuildNumber
+    asmVersion      <- safeBuildNumber
     asmInfoVersion  <- asmVersion + " - " + gitbranch + " - " + sha
 
-    nugetVersion    <- version + "." + safeBuildNumber
-    setupVersion    <- version + "." + safeBuildNumber
+    setupVersion    <- safeBuildNumber
+    nugetVersion    <- safeBuildNumber
 
     match gitbranch with
         | "master" -> ()
