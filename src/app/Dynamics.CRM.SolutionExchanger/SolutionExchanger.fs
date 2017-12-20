@@ -213,6 +213,6 @@ let ImportSolution crmEndpoint path =
     if not (File.Exists(path)) then
         failwith "File at path %A does not exist!" path
     let file = File.ReadAllBytes(path)
-    let importSolutionRequest = new ImportSolutionRequest( CustomizationFile = file )
+    let importSolutionRequest = new ImportSolutionRequest( CustomizationFile = file, PublishWorkflows = true )
     let response = organizationService.Value.Execute(importSolutionRequest) :?> ImportSolutionResponse
     printfn "Successfully imported solution"
