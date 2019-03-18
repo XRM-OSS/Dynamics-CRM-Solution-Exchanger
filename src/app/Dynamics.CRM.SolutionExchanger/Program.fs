@@ -149,14 +149,11 @@ let Publish args =
 [<EntryPoint>]
 let main argv = 
     if argv.Length < 1 then 
-        printf "%s%s%s%s%s%s%s%s%s%s%s" 
-            "Usage SolutionExchanger.exe [Export | Import | Publish] [/user: | /password: | /url: | /solution: | /managed: | /filename: | /workingdir: | /allSolutions: | /allOrganizations:]\n" 
+        printf "%s%s%s%s%s%s%s%s" 
+            "Usage SolutionExchanger.exe [Export | Import | Publish] [/connectionString: | /solution: | /managed: | /filename: | /workingdir: | /allSolutions: | /allOrganizations:]\n" 
             "/connectionString  -   Connection string for connecting to CRM. Always required.\n"
-            "/password          -   Password for authenticating with CRM endpoint. If no user and password are given, fallback to default credentials\n"
-            "/url               -   Required. Url of CRM endpoint\n"
             "/solution          -   Required if exporting. Unique name of solution to export. Can be replaced by allSolutions to get all unmanaged solutions in organization\n"
             "/allSolutions      -   Pass like /allSolutions:true to Export all unmanaged solutions in organization\n"
-            "/allOrganizations  -   Pass like /allOrganizations:true to Export all unmanaged solutions in all organizations\n"
             "/managed           -   Required if exporting. Pass 'true' for exporting managed, false for unmanaged\n"
             "/filename          -   Required if importing. Pass full path to solution. If Exporting sets name of exported solution file\n"
             "/workingdir        -   Sets working directory for writing exported solution to file\n"
