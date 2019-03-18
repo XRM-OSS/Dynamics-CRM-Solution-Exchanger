@@ -9,35 +9,22 @@ open Microsoft.Xrm.Sdk.Query
 open Microsoft.Xrm.Sdk.Client
 open Microsoft.Xrm.Sdk.Discovery
 open Microsoft.Crm.Sdk.Messages
+open Microsoft.Xrm.Tooling.Connector
+open System.Web.Services.Description
 
 let internal _timeOutDefaults = new TimeSpan(0, 10, 0)
 
 type CrmEndpointParams =
     {
-        Url : string
-        Username : string option
-        Password : string option
+        ConnectionString: string
         TimeOut: int option
     }
 
 let CrmEndpointDefaults = 
     {
-        Url = ""
-        Username = None
-        Password = None
+        ConnectionString = ""
         TimeOut = Some 10
     }
-
-/// Sets given credentials or if not present default credentials for user
-let internal GetCredentials (username : string option) (password : string option) =
-    let credentials = new ClientCredentials()
-    
-    if username.IsSome && not (String.IsNullOrEmpty username.Value) && password.IsSome && not (String.IsNullOrEmpty password.Value) then
-        credentials.UserName.UserName <- username.Value
-        credentials.UserName.Password <- password.Value
-    else     
-        credentials.Windows.ClientCredential <- (CredentialCache.DefaultCredentials :?> NetworkCredential)
-    credentials 
 
 /// Query all solutions in system
 let internal RetrieveAllSolutions (service : IOrganizationService) =
@@ -60,40 +47,26 @@ let internal RetrieveAllSolutions (service : IOrganizationService) =
     with 
     | ex -> printf "Encountered exception during retrieval of solutions: %s" ex.Message
             None
-
-let internal DiscoverOrganizations crmEndpoint =
-    let serviceParams = crmEndpoint CrmEndpointDefaults
-    let credentials = GetCredentials serviceParams.Username serviceParams.Password
-    
-    let discoveryService = new DiscoveryServiceProxy(new Uri(serviceParams.Url), null, credentials, null)
-    let discoveryRequest = new RetrieveOrganizationsRequest(AccessType = EndpointAccessType.Default, Release = OrganizationRelease.Current)
-    let discoveryResponse = discoveryService.Execute(discoveryRequest) :?> RetrieveOrganizationsResponse
-    discoveryResponse.Details
-    
+  
 /// Creates Organization Service for communicating with Dynamics CRM
 /// ## Parameters
 ///
 ///  - `username` - Username for authentication
 ///  - `password` - Password for authentication
 ///  - `url` - URL that is used to connect to CRM
-let private CreateOrganizationService username password url (timeout:int option) =
-    printfn "Creating Organization Service: %A" url
+let private CreateOrganizationService (serviceParams: CrmEndpointParams) =
+    printfn "Creating Organization Service: %A" serviceParams.ConnectionString
     
     try
-        let credentials = GetCredentials username password
-        let serviceUri = new Uri(url)
-        let proxy = new OrganizationServiceProxy(serviceUri, null, credentials, null)
-        proxy.EnableProxyTypes()
+        let conn = new CrmServiceClient(serviceParams.ConnectionString);
 
-        if timeout.IsSome then
-            printfn "Setting timeout for service to %i Minutes\n" timeout.Value
-            proxy.Timeout <- new TimeSpan(0, timeout.Value, 0)
-        else 
-            printfn "No timeout set, falling back to default of %f minutes\n" _timeOutDefaults.TotalMinutes
-            proxy.Timeout <- _timeOutDefaults
+        if not conn.IsReady then
+            failwith (sprintf "Could not connect, Error: %s" conn.LastCrmError)
 
-        printfn "Successfully created organization service"
-        Some(proxy :> IOrganizationService)
+        if conn.OrganizationWebProxyClient <> null then
+                conn.OrganizationWebProxyClient :> IOrganizationService;
+        else
+                conn.OrganizationServiceProxy :> IOrganizationService;
     with   
     | ex -> failwith (sprintf "Error while creating organization service: %A" ex.Message)
 
@@ -104,11 +77,10 @@ let private CreateOrganizationService username password url (timeout:int option)
 let PublishAll crmEndpoint =
     printfn "Publishing all"
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
-    if organizationService.IsNone then
-        failwith "Could not create connection to CRM, check your endpoint config"
+    let organizationService = CreateOrganizationService serviceParams
+    
     let publishRequest = new PublishAllXmlRequest()
-    let response = organizationService.Value.Execute(publishRequest)
+    let response = organizationService.Execute(publishRequest)
     printfn "Successfully published all" 
 
 /// Writes solution byte[] to file. If a file with the same name is present in given path, it is being overridden.
@@ -137,15 +109,12 @@ let ExportSolution crmEndpoint solutionName (managed : bool) =
     printfn "Exporting solution %A" (solutionName + ": " + if managed then "Managed" else "Unmanaged")
     
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
-    
-    if organizationService.IsNone then
-        failwith "Could not create connection to CRM, check your endpoint config"
-    
+    let organizationService = CreateOrganizationService serviceParams
+        
     let exportSolutionRequest = new ExportSolutionRequest( Managed = managed, SolutionName = solutionName )
     
     try
-        let response = organizationService.Value.Execute(exportSolutionRequest) :?> ExportSolutionResponse
+        let response = organizationService.Execute(exportSolutionRequest) :?> ExportSolutionResponse
         printfn "Successfully exported solution"
         Some(response.ExportSolutionFile)
     with
@@ -158,15 +127,12 @@ let ExportAllSolutions crmEndpoint managed =
     printfn "Retrieving all unmanaged solutions in Organization"
     
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
-    
-    if organizationService.IsNone then
-        failwith "Could not create connection to CRM, check your endpoint config"
-    
-    let solutions = (RetrieveAllSolutions organizationService.Value)
+    let organizationService = CreateOrganizationService serviceParams
+        
+    let solutions = (RetrieveAllSolutions organizationService)
 
     if solutions.IsNone then
-        failwith (sprintf "Failed to retrieve solutions for organization %s\n" serviceParams.Url)
+        failwith (sprintf "Failed to retrieve solutions for organization %s\n" serviceParams.ConnectionString)
 
     solutions.Value.Entities
     |> Seq.map (fun solution -> 
@@ -179,26 +145,6 @@ let ExportAllSolutions crmEndpoint managed =
     |> Seq.filter(fun solution -> solution.IsSome)
     |> Seq.map(fun solution -> solution.Value)
 
-/// Comment
-let ExportAllOrganizations crmEndpoint managed =
-    let serviceParams = crmEndpoint CrmEndpointDefaults
-
-    let organizations = DiscoverOrganizations crmEndpoint
-    organizations
-    |> Seq.map(fun organization -> 
-                try
-                    Some (organization.FriendlyName, ExportAllSolutions (fun endpoint -> { endpoint with  
-                                                                                            // Retrieve endpoint at index 1, because this is the organization service
-                                                                                            Url = Seq.nth 1 (organization.Endpoints.Values)
-                                                                                            Username = serviceParams.Username
-                                                                                            Password = serviceParams.Password 
-                                                                                            TimeOut = serviceParams.TimeOut}) managed)
-                with 
-                | ex -> printf "Encountered exception: %s\n" ex.Message
-                        None)
-    |> Seq.filter(fun solution -> solution.IsSome)
-    |> Seq.map(fun solution -> solution.Value)
-
 /// Imports zipped solution file to Dynamics CRM
 /// ## Parameters
 ///
@@ -207,12 +153,11 @@ let ExportAllOrganizations crmEndpoint managed =
 let ImportSolution crmEndpoint path =
     printfn "Importing solution %A" path
     let serviceParams = crmEndpoint CrmEndpointDefaults
-    let organizationService = CreateOrganizationService serviceParams.Username serviceParams.Password serviceParams.Url serviceParams.TimeOut
-    if organizationService.IsNone then
-        failwith "Could not create connection to CRM, check your endpoint config"
+    let organizationService = CreateOrganizationService serviceParams
+    
     if not (File.Exists(path)) then
-        failwith "File at path %A does not exist!" path
+        failwith (sprintf "File at path %A does not exist!" path)
     let file = File.ReadAllBytes(path)
     let importSolutionRequest = new ImportSolutionRequest( CustomizationFile = file, PublishWorkflows = true )
-    let response = organizationService.Value.Execute(importSolutionRequest) :?> ImportSolutionResponse
+    let response = organizationService.Execute(importSolutionRequest) :?> ImportSolutionResponse
     printfn "Successfully imported solution"
