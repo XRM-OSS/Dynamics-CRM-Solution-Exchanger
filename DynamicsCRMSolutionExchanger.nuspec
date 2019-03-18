@@ -19,6 +19,7 @@
   <files>
     <file src="..\build\app\Dynamics.CRM.SolutionExchanger.exe" />
 	<file src="..\build\app\microsoft.*.dll" />
+    <file src="..\build\app\FSharp.Core.dll" />
 	<file src="..\CRM-SDK-LicenseTerms.docx" />
   </files>
 </package>

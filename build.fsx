@@ -40,7 +40,7 @@ Target "RestorePackages" (fun _ ->
 
 Target "BuildVersions" (fun _ ->
 
-    let safeBuildNumber = if not isLocalBuild then build else "0"
+    let safeBuildNumber = if not isLocalBuild then build else "1.0"
 
     asmVersion      <- safeBuildNumber
     asmInfoVersion  <- asmVersion + " - " + gitbranch + " - " + sha
